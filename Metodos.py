@@ -86,7 +86,7 @@ def plotar_grafico(x, y, tipo, grau, frame):
 
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
-    ax.set_title(f"Ajuste {tipo} - {grau}º Grau")
+    ax.set_title(f"Ajuste {tipo}")
     ax.legend()
     ax.grid()
 
