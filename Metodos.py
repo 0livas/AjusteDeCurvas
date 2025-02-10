@@ -8,7 +8,7 @@ import os
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 # Arquivo padrão inicial
-ARQUIVO_PADRAO = "Entrada.txt"
+ARQUIVO_PADRAO = "Entradas/Entrada.txt"
 
 def ler_dados(arquivo):
     """Lê os dados de um arquivo e retorna listas de x e y."""
@@ -20,6 +20,17 @@ def ler_dados(arquivo):
                 x.append(float(valores[0]))
                 y.append(float(valores[1]))
     return x, y
+
+def atualizar_num_pontos():
+    """Atualiza a exibição do número de pontos disponíveis no arquivo."""
+    arquivo = entrada_arquivo.get()
+    if not os.path.exists(arquivo):
+        num_pontos_var.set("Arquivo não encontrado")
+        return
+    x, y = ler_dados(arquivo)
+    num_pontos_var.set(f"Total de pontos: {len(x)}")
+    spin_pontos.config(to=len(x), state="normal")  # Atualiza limite do spinbox
+    spin_pontos.set(len(x))  # Define o valor padrão como o total de pontos disponíveis
 
 def ajuste_linear(x, y):
     """Realiza ajuste linear (y = ax + b)."""
@@ -117,13 +128,12 @@ def executar_ajuste():
         return
 
     x, y = ler_dados(arquivo)
+    num_pontos = int(spin_pontos.get())
+    x, y = x[:num_pontos], y[:num_pontos]  # Pega apenas os pontos selecionados
+    
     metodo = metodo_var.get()
-
-    try:
-        grau = int(grau_var.get()) if metodo == "Polinomial" else 1
-        plotar_grafico(x, y, metodo, grau, right_frame)
-    except ValueError:
-        print("Erro: O grau informado é inválido!")
+    grau = int(grau_var.get()) if metodo == "Polinomial" else 1
+    plotar_grafico(x, y, metodo, grau, right_frame)
 
 def plot_inicial(frame):
 
@@ -144,48 +154,46 @@ def plot_inicial(frame):
     
 
 def criar_interface():
-    global root, entrada_arquivo, right_frame
+    global root, entrada_arquivo, right_frame, metodo_var, grau_var, num_pontos_var, spin_pontos
     root = tk.Tk()
-    #root.configure(background='white')
     root.geometry("1600x900")
     root.title("Ajuste de Curvas")
-
-    # Frame fixo para os controles no lado esquerdo
-    left_frame = ttk.Frame(root)    
-    left_frame.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)  
+    
+    left_frame = ttk.Frame(root)
+    left_frame.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
     ttk.Separator(root, orient=tk.VERTICAL).pack(side=tk.LEFT, fill=tk.Y, padx=10)
-
-
-    global metodo_var, grau_var
+    
     metodo_var = tk.StringVar(value="Linear")
     grau_var = tk.StringVar(value="2")
-
-    ttk.Label(left_frame, text="Arquivo:",  font=("Arial", 14)).pack(anchor=tk.W, pady=10)  
-    entrada_arquivo = ttk.Entry(left_frame,font=("Arial", 12), width=40)
-    entrada_arquivo.insert(0, ARQUIVO_PADRAO)  
+    num_pontos_var = tk.StringVar(value="Total de pontos: ?")
+    
+    ttk.Label(left_frame, text="Arquivo:", font=("Arial", 14)).pack(anchor=tk.W, pady=5)
+    entrada_arquivo = ttk.Entry(left_frame, font=("Arial", 12), width=40)
+    entrada_arquivo.insert(0, ARQUIVO_PADRAO)
     entrada_arquivo.pack(anchor=tk.W, pady=5)
-
-    ttk.Button(left_frame, text="Buscar", command=lambda: entrada_arquivo.delete(0, tk.END) or entrada_arquivo.insert(0, filedialog.askopenfilename())).pack(anchor=tk.CENTER, pady=5)
-
-    ttk.Separator(left_frame, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=10)
-
-    ttk.Label(left_frame, text="Método:",  font=("Arial", 14)).pack(anchor=tk.W, pady=5)
+    
+    ttk.Button(left_frame, text="Buscar", command=lambda: [entrada_arquivo.delete(0, tk.END), entrada_arquivo.insert(0, filedialog.askopenfilename()), atualizar_num_pontos()]).pack(anchor=tk.CENTER, pady=5)
+    
+    frame_pontos = ttk.Frame(left_frame)
+    frame_pontos.pack(anchor=tk.W, pady=5, fill=tk.X)
+    ttk.Label(frame_pontos, textvariable=num_pontos_var, font=("Arial", 12)).pack(side=tk.LEFT)
+    ttk.Label(frame_pontos, text=" | Selecionar pontos: ", font=("Arial", 12)).pack(side=tk.LEFT)
+    spin_pontos = ttk.Spinbox(frame_pontos, from_=1, to=100, width=5, state="disabled")
+    spin_pontos.pack(side=tk.LEFT)
+    
+    ttk.Label(left_frame, text="Método:", font=("Arial", 14)).pack(anchor=tk.W, pady=5)
     combo_metodo = ttk.Combobox(left_frame, font=("Arial", 12), textvariable=metodo_var, values=["Linear", "Polinomial", "Exponencial"])
     combo_metodo.pack(anchor=tk.W, pady=5)
-
-    ttk.Label(left_frame, text="Grau:",  font=("Arial", 14)).pack(anchor=tk.W, pady=5)
-    combo_grau = ttk.Combobox(left_frame,font=("Arial", 12), textvariable=grau_var, values=["2", "3", "4", "5"])
+    
+    ttk.Label(left_frame, text="Grau:", font=("Arial", 14)).pack(anchor=tk.W, pady=5)
+    combo_grau = ttk.Combobox(left_frame, font=("Arial", 12), textvariable=grau_var, values=["2", "3", "4", "5"])
     combo_grau.pack(anchor=tk.W, pady=5)
-
+    
     ttk.Button(left_frame, text="Gerar Ajuste", command=executar_ajuste).pack(anchor=tk.W, pady=10)
-
-
-    # Frame para o gráfico no lado direito
+    
     right_frame = ttk.Frame(root)
     right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
-
-    plot_inicial(right_frame)
-
-
+    
+    atualizar_num_pontos()  # Atualiza os pontos automaticamente ao iniciar
+    
     return root
-
