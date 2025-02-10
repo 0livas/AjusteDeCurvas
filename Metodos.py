@@ -37,24 +37,34 @@ def ajuste_linear(x, y):
     return a, b, R2
 
 def ajuste_polinomial(x, y, grau):
-    """Realiza ajuste polinomial de grau especificado."""
-    if grau == 1:
-        return ajuste_linear(x, y)
-
+    """Realiza ajuste polinomial de grau especificado e retorna os coeficientes e R^2."""
+    # Cálculo das somas necessárias para o ajuste
     soma_x = [sum(x_i ** p for x_i in x) for p in range(2 * grau + 1)]
     soma_xy = [sum((x_i ** p) * y_i for x_i, y_i in zip(x, y)) for p in range(grau + 1)]
 
+    # Construção do sistema de equações lineares
     A = [[soma_x[i + j] for j in range(grau + 1)] for i in range(grau + 1)]
     B = np.array(soma_xy).reshape(-1, 1)
 
-    coeficientes = np.linalg.solve(A, B)
-    return coeficientes
+    # Resolução do sistema para encontrar os coeficientes
+    coeficientes = np.linalg.solve(A, B).flatten()
+
+    # Cálculo de R^2
+    y_media = sum(y) / len(y)
+    y_previsto = [sum(c * (x_i ** i) for i, c in enumerate(coeficientes)) for x_i in x]
+    ss_total = sum((y_i - y_media) ** 2 for y_i in y)
+    ss_residual = sum((y_i - yp) ** 2 for y_i, yp in zip(y, y_previsto))
+    R2 = 1 - (ss_residual / ss_total)
+
+    return coeficientes, R2
+
 
 def ajuste_exponencial(x, y):
     """Realiza ajuste exponencial (y = a * e^(bx))."""
     y_log = [math.log(y_i) for y_i in y]
     b, log_a, R2 = ajuste_linear(x, y_log)
     a = math.exp(log_a)
+
     return a, b, R2
 
 def plotar_grafico(x, y, tipo, grau, frame):
@@ -69,21 +79,21 @@ def plotar_grafico(x, y, tipo, grau, frame):
     if tipo == "Linear":
         a, b, R2 = ajuste_linear(x, y)
         y_plot = [a * xi + b for xi in x_plot]
-        ax.plot(x_plot, y_plot, label=f"y = {a:.4f}x + {b:.4f}")
-        ax.text(0.5, 0.95, f'R² = {R2:.4f}', transform=ax.transAxes, fontsize=12, color='blue', ha='center')
+        ax.plot(x_plot, y_plot, label=f"y = {a:.4f}x + {b:.4f}\n\nR² = {R2:.4f}")
+
 
     elif tipo == "Polinomial":
-        coef = ajuste_polinomial(x, y, grau).flatten()
+        coef , R2 = ajuste_polinomial(x, y, grau)
         y_plot = [sum(c * (xi ** i) for i, c in enumerate(coef)) for xi in x_plot]
-        equacao = " + ".join(f"{c:.4f}x^{i}" if i > 0 else f"{c:.4f}" for i, c in enumerate(coef))
-        ax.plot(x_plot, y_plot, label=f"y = {equacao}")
+        equacao = " + ".join(f"({c:.4f}x^{i})" if i > 0 else f"({c:.4f})" for i, c in enumerate(coef))
+        ax.plot(x_plot, y_plot, label=f"y = {equacao}\n\nR² = {R2:.4f}")
 
     elif tipo == "Exponencial":
         a, b, R2 = ajuste_exponencial(x, y)
         y_plot = [a * math.exp(b * xi) for xi in x_plot]
-        ax.plot(x_plot, y_plot, label=f"y = {a:.4f}e^({b:.4f}x)")
-        ax.text(0.5, 0.95, f'R² = {R2:.4f}', transform=ax.transAxes, fontsize=12, color='blue', ha='center')
+        ax.plot(x_plot, y_plot, label=f"y = {a:.4f}e^({b:.4f}x)\n\nR² = {R2:.4f}")
 
+    ax.plot
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.set_title(f"Ajuste {tipo}")
@@ -114,6 +124,24 @@ def executar_ajuste():
         plotar_grafico(x, y, metodo, grau, right_frame)
     except ValueError:
         print("Erro: O grau informado é inválido!")
+
+def plot_inicial(frame):
+
+    fig = plt.Figure(figsize=(10, 6))
+    ax = fig.add_subplot(111)
+    ax.plot
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_title(f"Ajuste ---- ")
+    ax.grid()
+
+    for widget in frame.winfo_children():
+        widget.destroy()
+
+    canvas = FigureCanvasTkAgg(fig, master=frame)
+    canvas.draw()
+    canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+    
 
 def criar_interface():
     global root, entrada_arquivo, right_frame
@@ -151,9 +179,13 @@ def criar_interface():
 
     ttk.Button(left_frame, text="Gerar Ajuste", command=executar_ajuste).pack(anchor=tk.W, pady=10)
 
+
     # Frame para o gráfico no lado direito
     right_frame = ttk.Frame(root)
     right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+    plot_inicial(right_frame)
+
 
     return root
 
