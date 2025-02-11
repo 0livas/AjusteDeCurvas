@@ -186,7 +186,7 @@ def criar_interface():
     combo_metodo.pack(anchor=tk.W, pady=5)
     
     ttk.Label(left_frame, text="Grau:", font=("Arial", 14)).pack(anchor=tk.W, pady=5)
-    combo_grau = ttk.Combobox(left_frame, font=("Arial", 12), textvariable=grau_var, values=["2", "3", "4", "5"])
+    combo_grau = ttk.Combobox(left_frame, font=("Arial", 12), textvariable=grau_var, values=["2", "3", "4", "5", "6", "7", "8", "9"])
     combo_grau.pack(anchor=tk.W, pady=5)
     
     ttk.Button(left_frame, text="Gerar Ajuste", command=executar_ajuste).pack(anchor=tk.W, pady=10)
