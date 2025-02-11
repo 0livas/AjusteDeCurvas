@@ -6,6 +6,8 @@ from tkinter import ttk
 from tkinter import filedialog
 import os
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from PIL import Image, ImageTk
+
 
 # Arquivo padrão inicial
 ARQUIVO_PADRAO = "Entradas/Entrada.txt"
@@ -108,7 +110,7 @@ def plotar_grafico(x, y, tipo, grau, frame):
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.set_title(f"Ajuste {tipo}")
-    ax.legend(fontsize = 7)
+    ax.legend(fontsize = 7)   
     ax.grid()
 
     # Limpa o frame antes de adicionar o novo gráfico
@@ -135,29 +137,37 @@ def executar_ajuste():
     grau = int(grau_var.get()) if metodo == "Polinomial" else 1
     plotar_grafico(x, y, metodo, grau, right_frame)
 
+
 def plot_inicial(frame):
+    def resize_image(event):
+        # Obter as dimensões do frame
+        new_width = event.width
+        new_height = event.height
 
-    fig = plt.Figure(figsize=(10, 6))
-    ax = fig.add_subplot(111)
-    ax.plot
-    ax.set_xlabel("X")
-    ax.set_ylabel("Y")
-    ax.set_title(f"Ajuste ---- ")
-    ax.grid()
+        resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+        photo = ImageTk.PhotoImage(resized_image)
 
-    for widget in frame.winfo_children():
-        widget.destroy()
+        label.config(image=photo)
+        label.image = photo 
 
-    canvas = FigureCanvasTkAgg(fig, master=frame)
-    canvas.draw()
-    canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-    
+
+    image = Image.open("img/Ajuste de Curvas.png")
+
+    photo = ImageTk.PhotoImage(image)
+    label = tk.Label(frame, image=photo)
+    label.image = photo
+    label.pack(fill=tk.BOTH, expand=True)
+
+    frame.bind("<Configure>", resize_image)
+
+
 
 def criar_interface():
     global root, entrada_arquivo, right_frame, metodo_var, grau_var, num_pontos_var, spin_pontos
     root = tk.Tk()
     root.geometry("1600x900")
     root.title("Ajuste de Curvas")
+    
     
     left_frame = ttk.Frame(root)
     left_frame.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
@@ -192,8 +202,9 @@ def criar_interface():
     ttk.Button(left_frame, text="Gerar Ajuste", command=executar_ajuste).pack(anchor=tk.W, pady=10)
     
     right_frame = ttk.Frame(root)
-    right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
-    
+    right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10, anchor=tk.CENTER)
+    right_frame.background = "red"
     atualizar_num_pontos()  # Atualiza os pontos automaticamente ao iniciar
+    plot_inicial(right_frame)
     
     return root
