@@ -58,7 +58,7 @@ def ajuste_polinomial(x, y, grau):
     B = np.array(soma_xy).reshape(-1, 1)
 
     # Resolução do sistema para encontrar os coeficientes
-    coeficientes = np.linalg.solve(A, B).flatten()
+    coeficientes = np.linalg.solve(A, B).flatten() 
 
     # Cálculo de R^2
     y_media = sum(y) / len(y)
@@ -108,7 +108,7 @@ def plotar_grafico(x, y, tipo, grau, frame):
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.set_title(f"Ajuste {tipo}")
-    ax.legend()
+    ax.legend(fontsize = 7)
     ax.grid()
 
     # Limpa o frame antes de adicionar o novo gráfico
@@ -186,7 +186,7 @@ def criar_interface():
     combo_metodo.pack(anchor=tk.W, pady=5)
     
     ttk.Label(left_frame, text="Grau:", font=("Arial", 14)).pack(anchor=tk.W, pady=5)
-    combo_grau = ttk.Combobox(left_frame, font=("Arial", 12), textvariable=grau_var, values=["2", "3", "4", "5", "6", "7", "8", "9"])
+    combo_grau = ttk.Combobox(left_frame, font=("Arial", 12), textvariable=grau_var, values=["2", "3", "4", "5" , "6", "7", "8", "9"])
     combo_grau.pack(anchor=tk.W, pady=5)
     
     ttk.Button(left_frame, text="Gerar Ajuste", command=executar_ajuste).pack(anchor=tk.W, pady=10)
