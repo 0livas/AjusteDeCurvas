@@ -8,7 +8,6 @@ import os
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from PIL import Image, ImageTk
 
-
 # Arquivo padrão inicial
 ARQUIVO_PADRAO = "Entradas/Entrada.txt"
 
@@ -80,7 +79,7 @@ def ajuste_exponencial(x, y):
 
     return a, b, R2
 
-def plotar_grafico(x, y, tipo, grau, frame):
+def plotar_grafico(x, y, tipo, grau, frame, left_frame):
     """Plota o gráfico de acordo com o ajuste escolhido."""
     fig = plt.Figure(figsize=(10, 6))
     ax = fig.add_subplot(111)
@@ -93,7 +92,7 @@ def plotar_grafico(x, y, tipo, grau, frame):
         a, b, R2 = ajuste_linear(x, y)
         y_plot = [a * xi + b for xi in x_plot]
         ax.plot(x_plot, y_plot, label=f"y = {a:.4f}x + {b:.4f}\n\nR² = {R2:.4f}")
-
+        ttk.Label(left_frame, text=f"B0 = {b}\nB1 = {a}", name="label", font=("Arial", 14)).pack(anchor=tk.W, pady=5)
 
     elif tipo == "Polinomial":
         coef , R2 = ajuste_polinomial(x, y, grau)
@@ -101,10 +100,19 @@ def plotar_grafico(x, y, tipo, grau, frame):
         equacao = " + ".join(f"({c:.4f}x^{i})" if i > 0 else f"({c:.4f})" for i, c in enumerate(coef))
         ax.plot(x_plot, y_plot, label=f"y = {equacao}\n\nR² = {R2:.4f}")
 
+        texto = "".join(f"B{i} = {c}\n" if i > 0 else f"B{i} = {c}\n"  for i, c in enumerate(coef)) 
+        ttk.Label(left_frame, text=texto, name="label", font=("Arial", 14)).pack(anchor=tk.W, pady=5)
+
+
+
     elif tipo == "Exponencial":
         a, b, R2 = ajuste_exponencial(x, y)
         y_plot = [a * math.exp(b * xi) for xi in x_plot]
         ax.plot(x_plot, y_plot, label=f"y = {a:.4f}e^({b:.4f}x)\n\nR² = {R2:.4f}")
+
+        ttk.Label(left_frame, text=f"a = {a}\nb = {b}", name="label", font=("Arial", 14)).pack(anchor=tk.W, pady=5)
+
+
 
     ax.plot
     ax.set_xlabel("X")
@@ -135,7 +143,7 @@ def executar_ajuste():
     
     metodo = metodo_var.get()
     grau = int(grau_var.get()) if metodo == "Polinomial" else 1
-    plotar_grafico(x, y, metodo, grau, right_frame)
+    plotar_grafico(x, y, metodo, grau, right_frame, left_frame)
 
 
 def plot_inicial(frame):
@@ -163,7 +171,7 @@ def plot_inicial(frame):
 
 
 def criar_interface():
-    global root, entrada_arquivo, right_frame, metodo_var, grau_var, num_pontos_var, spin_pontos
+    global root, entrada_arquivo, right_frame, metodo_var, grau_var, num_pontos_var, spin_pontos,left_frame
     root = tk.Tk()
     root.geometry("1600x900")
     root.title("Ajuste de Curvas")
